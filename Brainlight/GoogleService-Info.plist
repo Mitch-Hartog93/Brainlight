@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>869698325583-d3n3v1o4qmppaqppu3uc9a2a08p08qkf.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.869698325583-d3n3v1o4qmppaqppu3uc9a2a08p08qkf</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBW4JNdLZh-EhCufbp5R6nWhXD27aePe0E</string>
+	<key>GCM_SENDER_ID</key>
+	<string>869698325583</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.brainlight.Brainlight</string>
+	<key>PROJECT_ID</key>
+	<string>brainlight-a051a</string>
+	<key>STORAGE_BUCKET</key>
+	<string>brainlight-a051a.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:869698325583:ios:d210824af111717a6bee3a</string>
+	<key>DATABASE_URL</key>
+	<string>https://brainlight-a051a.firebaseio.com</string>
+</dict>
+</plist>

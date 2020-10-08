@@ -1,0 +1,6 @@
+framework module Pods_Brainlight_BrainlightUITests {
+  umbrella header "Pods-Brainlight-BrainlightUITests-umbrella.h"
+
+  export *
+  module * { export * }
+}
