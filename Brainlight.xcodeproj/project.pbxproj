@@ -138,7 +138,6 @@
 		7CB0B8F4252F0B9F00D6177E /* Brainlight */ = {
 			isa = PBXGroup;
 			children = (
-				7CF55D5F252F3CC400D4A843 /* Media */,
 				7CF55D54252F3C8100D4A843 /* Helpers */,
 				7CB0B937252F0C3500D6177E /* View Controllers */,
 				7CB0B8F5252F0B9F00D6177E /* AppDelegate.swift */,
@@ -188,13 +187,6 @@
 				7CF55D59252F3CAE00D4A843 /* Utilities.swift */,
 			);
 			path = Helpers;
-			sourceTree = "<group>";
-		};
-		7CF55D5F252F3CC400D4A843 /* Media */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Media;
 			sourceTree = "<group>";
 		};
 		93BC5BDD07834448AE5A6702 /* Pods */ = {
