@@ -11,33 +11,57 @@ import SwiftUI
         
 class ViewController: UIViewController {
     
-    
+
     @IBOutlet weak var signUpButton: UIButton!
-    
     @IBOutlet weak var logInButton: UIButton!
+    @IBOutlet weak var logo: UIImageView!
+    
+    
+    
     
 
     override func viewDidLoad() {
-        super.viewDidLoad()
-        // Do any additional setup after loading the view.
+                    super.viewDidLoad()
         
-        setUpElements()
+          self.navigationController!.navigationBar.setBackgroundImage(UIImage(), for: .default)
+          self.navigationController!.navigationBar.shadowImage = UIImage()
+          self.navigationController!.navigationBar.isTranslucent = true
+                    adjustLogo()
+                    assignbackground()
+                   // Do any additional setup after loading the view.
+               }
+
+         func assignbackground(){
+               let background = UIImage(named: "background2")
+
+               var imageView : UIImageView!
+               imageView = UIImageView(frame: view.bounds)
+               imageView.contentMode =  UIView.ContentMode.scaleAspectFill
+               imageView.clipsToBounds = true
+               imageView.image = background
+               imageView.center = view.center
+               view.addSubview(imageView)
+               view.sendSubviewToBack(imageView)
+
+            setUpElements()
         
     }
     
+    func adjustLogo() {
+        
+        logo.layer.shadowColor = UIColor.black.cgColor
+        logo.layer.shadowOffset = .zero
+        logo.layer.shadowOpacity = 1
+        logo.layer.shadowRadius = 1.0
+        logo.clipsToBounds = false
+        logo.layer.shadowOffset = .zero
+        
+    }
     func setUpElements() {
         
-        Utilities.styleFilledButton(signUpButton)
-        Utilities.styleHollowButton(logInButton)
+        Utilities.styleHollowButton(signUpButton)
+        Utilities.styleFilledButton(logInButton)
         
     }
 
 }
-
-
-struct ViewController_Previews: PreviewProvider {
-    static var previews: some View {
-        /*@START_MENU_TOKEN@*/Text("Hello, World!")/*@END_MENU_TOKEN@*/
-    }
-}
-

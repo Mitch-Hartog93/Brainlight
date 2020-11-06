@@ -25,12 +25,30 @@ class SignUpViewController: UIViewController {
     @IBOutlet weak var signUpButton: UIButton!
     
     @IBOutlet weak var errorLabel: UILabel!
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+    
+        assignbackground()
+        setUpElements()
+        // Do any additional setup after loading the view.
+   }
+
+func assignbackground(){
+   let background = UIImage(named: "background2")
+
+   var imageView : UIImageView!
+   imageView = UIImageView(frame: view.bounds)
+   imageView.contentMode =  UIView.ContentMode.scaleAspectFill
+   imageView.clipsToBounds = true
+   imageView.image = background
+   imageView.center = view.center
+   view.addSubview(imageView)
+   view.sendSubviewToBack(imageView)
 
         // Do any additional setup after loading the view.
-        setUpElements()
+       
     }
     
     
@@ -38,8 +56,17 @@ class SignUpViewController: UIViewController {
     func setUpElements() {
         // 2.1 Hiding the error label
         errorLabel.alpha = 0
+        
+      
+           
         // 2.2 Style of the Elements
         Utilities.styleFilledButton(signUpButton)
+        Utilities.styleTextField(firstNameTextField)
+        Utilities.styleTextField(lastNameTextField)
+        Utilities.styleTextField(emailTextField)
+        Utilities.styleTextField(passwordTextField)
+        
+        
     }
     
     
@@ -126,9 +153,9 @@ class SignUpViewController: UIViewController {
     
     func transitionToHome() {
         
-        let homeViewController = storyboard?.instantiateViewController(identifier: Constants.Storyboard.homeViewController) as? HomeViewController
+        let infoViewController = storyboard?.instantiateViewController(identifier: Constants.Storyboard.infoViewController) as? InfoViewController
         
-        view.window?.rootViewController = homeViewController
+        view.window?.rootViewController = infoViewController
         view.window?.makeKeyAndVisible()
     }
     

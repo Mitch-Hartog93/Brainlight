@@ -26,6 +26,21 @@ class LogInViewController: UIViewController {
 
         // Do any additional setup after loading the view.
         setUpElements()
+        assignbackground()
+    }
+    
+    func assignbackground(){
+       let background = UIImage(named: "background2")
+
+       var imageView : UIImageView!
+       imageView = UIImageView(frame: view.bounds)
+       imageView.contentMode =  UIView.ContentMode.scaleAspectFill
+       imageView.clipsToBounds = true
+       imageView.image = background
+       imageView.center = view.center
+       view.addSubview(imageView)
+       view.sendSubviewToBack(imageView)
+        
     }
     
     // 2. STYLING THE BUTTONS AND LABELS
@@ -36,6 +51,10 @@ class LogInViewController: UIViewController {
         
         // 2.2 Styling the elements
         Utilities.styleFilledButton(loginButton)
+        Utilities.styleTextField(emailTextField)
+        Utilities.styleTextField(passwordTextField)
+        
+        
         
     }
 
@@ -60,9 +79,9 @@ class LogInViewController: UIViewController {
             }
             else {
                 
-                let homeViewController = self.storyboard?.instantiateViewController(identifier: Constants.Storyboard.homeViewController) as? HomeViewController
+                let infoViewController = self.storyboard?.instantiateViewController(identifier: Constants.Storyboard.infoViewController) as? InfoViewController
                 
-                self.view.window?.rootViewController = homeViewController
+                self.view.window?.rootViewController = infoViewController
                 self.view.window?.makeKeyAndVisible()
                 
             }
