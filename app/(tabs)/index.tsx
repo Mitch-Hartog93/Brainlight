@@ -22,7 +22,7 @@ const FREQUENCY = 40;
 const PERIOD = 1000 / FREQUENCY;
 const HALF_PERIOD = PERIOD / 2;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
-const AUDIO_GAIN = 0.2; // Increased from 0.1 for better audibility
+const AUDIO_GAIN = 0.2;
 const LEFT_FREQUENCY = 420;
 const RIGHT_FREQUENCY = 380;
 
@@ -45,6 +45,7 @@ export default function TherapyScreen() {
   const [showDurationPicker, setShowDurationPicker] = useState(false);
   const [showTimer, setShowTimer] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+  const [isAudioInitialized, setIsAudioInitialized] = useState(false);
 
   // Web Audio API context and nodes
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -81,6 +82,24 @@ export default function TherapyScreen() {
     }
   };
 
+  const initializeAudioContext = async () => {
+    if (Platform.OS !== 'web' || isAudioInitialized) return;
+
+    try {
+      // Create new audio context
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Resume the context (needed for iOS)
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+      
+      setIsAudioInitialized(true);
+    } catch (error) {
+      console.error('Error initializing audio context:', error);
+    }
+  };
+
   const cleanupAudio = () => {
     try {
       if (gainNodeRef.current) {
@@ -97,10 +116,6 @@ export default function TherapyScreen() {
         rightOscillatorRef.current.disconnect();
         rightOscillatorRef.current = null;
       }
-      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-        audioContextRef.current.close();
-        audioContextRef.current = null;
-      }
     } catch (error) {
       console.error('Error cleaning up audio:', error);
     }
@@ -111,12 +126,15 @@ export default function TherapyScreen() {
 
     try {
       cleanupAudio();
+      
+      if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+        await initializeAudioContext();
+      }
 
-      // Create new audio context
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
       const ctx = audioContextRef.current;
+      if (!ctx) return;
 
-      // Create and configure gain node with higher initial volume
+      // Create and configure gain node
       gainNodeRef.current = ctx.createGain();
       gainNodeRef.current.gain.value = 0;
       gainNodeRef.current.connect(ctx.destination);
@@ -147,11 +165,11 @@ export default function TherapyScreen() {
       leftOscillatorRef.current.start();
       rightOscillatorRef.current.start();
 
-      // Gradually increase volume over 1 second
+      // Gradually increase volume
       gainNodeRef.current.gain.setValueAtTime(0, ctx.currentTime);
       gainNodeRef.current.gain.linearRampToValueAtTime(AUDIO_GAIN, ctx.currentTime + 1);
 
-      // Resume audio context if it's suspended
+      // Ensure context is running
       if (ctx.state === 'suspended') {
         await ctx.resume();
       }
@@ -282,7 +300,7 @@ export default function TherapyScreen() {
     setRemainingTime(duration * 60);
     setProgress(1);
     setIsActive(true);
-    setStarCount(0); // Reset star count when starting new session
+    setStarCount(0);
     sessionStartTimeRef.current = Date.now();
   };
 
@@ -448,7 +466,7 @@ export default function TherapyScreen() {
                 style={[styles.modalButton, styles.confirmButton, { width: '100%' }]}
                 onPress={() => {
                   setShowCompletionModal(false);
-                  setStarCount(0); // Reset star count when closing completion modal
+                  setStarCount(0);
                 }}
               >
                 <Text style={styles.confirmButtonText}>Close</Text>
