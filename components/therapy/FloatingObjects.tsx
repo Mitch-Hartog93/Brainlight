@@ -48,29 +48,34 @@ const FloatingObject = ({
 
   useEffect(() => {
     // Horizontal movement (left to right only)
-    translateX.value = withDelay(
-      delay,
-      withRepeat(
-        withTiming(END_X, {
-          duration,
-          easing: Easing.linear,
-        }),
-        -1,
-        false
-      )
-    );
+    const moveHorizontal = () => {
+      translateX.value = START_X;
+      translateX.value = withTiming(END_X, {
+        duration,
+        easing: Easing.linear,
+      }, (finished) => {
+        if (finished) {
+          hasCrossedThreshold.current = false;
+          moveHorizontal();
+        }
+      });
+    };
 
-    // Gentle vertical floating motion
+    // Start horizontal movement with delay
+    setTimeout(moveHorizontal, delay);
+
+    // Gentle vertical floating motion (limited range)
+    const floatRange = 40; // Maximum float distance up/down
     translateY.value = withDelay(
       delay,
       withRepeat(
         withSequence(
-          withTiming(startY - 40, {
-            duration: duration / 3,
+          withTiming(startY - floatRange, {
+            duration: duration / 4,
             easing: Easing.inOut(Easing.sin),
           }),
-          withTiming(startY + 40, {
-            duration: duration / 3,
+          withTiming(startY + floatRange, {
+            duration: duration / 4,
             easing: Easing.inOut(Easing.sin),
           })
         ),
@@ -101,15 +106,11 @@ const FloatingObject = ({
         hasCrossedThreshold.current = true;
         onStarPass?.();
       }
-      
-      // Reset when object goes off screen to the right
-      if (currentX >= END_X) {
-        hasCrossedThreshold.current = false;
-        translateX.value = START_X;
-      }
     }, 50);
 
-    return () => clearInterval(checkInterval);
+    return () => {
+      clearInterval(checkInterval);
+    };
   }, []);
 
   const style = useAnimatedStyle(() => ({
@@ -144,7 +145,7 @@ export default function FloatingObjects({ onStarPass }: FloatingObjectsProps) {
         <FloatingObject
           key={index}
           delay={index * 2000}
-          duration={8000 + Math.random() * 4000}
+          duration={10000 + Math.random() * 4000} // Slower movement for better visibility
           startY={100 + Math.random() * (Dimensions.get('window').height - 200)}
           ObjectComponent={object.component}
           color={object.color}
