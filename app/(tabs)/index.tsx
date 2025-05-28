@@ -6,7 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { 
   useAnimatedStyle, 
-  withTiming, 
+  withTiming,
   withDelay,
   withSequence,
   Easing
@@ -76,6 +76,17 @@ export default function TherapyScreen() {
       console.error('Error loading audio preference:', error);
     }
   };
+
+  // Effect to handle audio state changes
+  useEffect(() => {
+    if (isActive) {
+      if (isAudioEnabled && Platform.OS === 'web') {
+        audioManager.start(LEFT_FREQUENCY, RIGHT_FREQUENCY, AUDIO_GAIN);
+      } else {
+        audioManager.stop();
+      }
+    }
+  }, [isAudioEnabled, isActive]);
 
   const flicker = (timestamp: number) => {
     if (!lastFrameTimeRef.current) {
