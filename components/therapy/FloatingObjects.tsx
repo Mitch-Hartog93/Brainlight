@@ -64,7 +64,7 @@ const FloatingObject = ({
     setTimeout(moveHorizontal, delay);
 
     // Gentle vertical floating motion (limited range)
-    const floatRange = 40; // Maximum float distance up/down
+    const floatRange = 40;
     translateY.value = withDelay(
       delay,
       withRepeat(
@@ -115,12 +115,15 @@ const FloatingObject = ({
       { translateY: translateY.value },
       { rotate: `${rotation.value}deg` },
     ],
-    opacity: withTiming(1, { duration: 1000 }),
   }));
 
   return (
     <Animated.View style={[styles.floatingObject, style]}>
-      <ObjectComponent size={OBJECT_SIZE} color={color} />
+      <ObjectComponent 
+        size={OBJECT_SIZE} 
+        color={color}
+        strokeWidth={1.5}
+      />
     </Animated.View>
   );
 };
@@ -130,7 +133,6 @@ interface FloatingObjectsProps {
 }
 
 export default function FloatingObjects({ onStarPass }: FloatingObjectsProps) {
-  // Create 5 stars and 5 hearts alternating
   const objects = [...Array(10)].map((_, index) => ({
     ...OBJECTS[index % OBJECTS.length],
     isYellowStar: OBJECTS[index % OBJECTS.length].component === Star
@@ -142,7 +144,7 @@ export default function FloatingObjects({ onStarPass }: FloatingObjectsProps) {
         <FloatingObject
           key={index}
           delay={index * 2000}
-          duration={12000} // Fixed duration for consistent timing
+          duration={12000}
           startY={100 + Math.random() * (Dimensions.get('window').height - 200)}
           ObjectComponent={object.component}
           color={object.color}
