@@ -30,21 +30,20 @@ export default function ContactModal({
     setIsSending(true);
 
     try {
-      const response = await fetch('https://api.brainlight.app/contact', {
+      const response = await fetch('/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          subject,
-          message,
+          subject: subject.trim(),
+          message: message.trim(),
           deviceInfo: `Platform: ${Platform.OS}\nVersion: ${Platform.Version}`,
-          email: 'mhartog.93@gmail.com', // Support email
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        throw new Error(await response.text());
       }
 
       setSuccess(true);
@@ -56,9 +55,18 @@ export default function ContactModal({
       }, 2000);
     } catch (err) {
       setError('Failed to send message. Please try again.');
+      console.error('Error sending message:', err);
     } finally {
       setIsSending(false);
     }
+  };
+
+  const resetForm = () => {
+    setSubject('');
+    setMessage('');
+    setError(null);
+    setSuccess(false);
+    onClose();
   };
 
   return (
@@ -66,13 +74,13 @@ export default function ContactModal({
       visible={visible}
       transparent={true}
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={resetForm}
     >
       <BlurView intensity={20} style={styles.container} tint={isDarkMode ? "dark" : "light"}>
         <View style={[styles.content, isDarkMode && styles.darkContent]}>
           <View style={styles.header}>
             <Text style={[styles.title, isDarkMode && styles.darkText]}>Contact Support</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <TouchableOpacity onPress={resetForm} style={styles.closeButton}>
               <X size={24} color={isDarkMode ? '#FFFFFF' : '#000000'} />
             </TouchableOpacity>
           </View>
@@ -90,6 +98,7 @@ export default function ContactModal({
                 onChangeText={setSubject}
                 placeholder="Enter subject"
                 placeholderTextColor={isDarkMode ? '#666666' : '#999999'}
+                maxLength={100}
               />
             </View>
 
@@ -108,6 +117,7 @@ export default function ContactModal({
                 multiline
                 numberOfLines={6}
                 textAlignVertical="top"
+                maxLength={1000}
               />
             </View>
 
