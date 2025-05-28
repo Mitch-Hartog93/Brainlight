@@ -277,6 +277,7 @@ export default function TherapyScreen() {
     setRemainingTime(duration * 60);
     setProgress(1);
     setIsActive(true);
+    setStarCount(0); // Reset star count when starting new session
     sessionStartTimeRef.current = Date.now();
   };
 
@@ -440,7 +441,10 @@ export default function TherapyScreen() {
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.confirmButton, { width: '100%' }]}
-                onPress={() => setShowCompletionModal(false)}
+                onPress={() => {
+                  setShowCompletionModal(false);
+                  setStarCount(0); // Reset star count when closing completion modal
+                }}
               >
                 <Text style={styles.confirmButtonText}>Close</Text>
               </TouchableOpacity>
