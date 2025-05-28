@@ -10,12 +10,15 @@ class AudioManager {
     if (Platform.OS !== 'web') return;
 
     try {
-      // Only create new context if one doesn't exist
       if (!this.audioContext) {
-        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        // Create new context with explicit options
+        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
+          latencyHint: 'interactive',
+          sampleRate: 44100
+        });
       }
       
-      // Ensure context is running
+      // Resume context if suspended
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume();
       }
@@ -25,34 +28,33 @@ class AudioManager {
   }
 
   async start(leftFreq: number, rightFreq: number, gain: number = 0.1) {
-    if (Platform.OS !== 'web') return;
+    if (Platform.OS !== 'web' || !this.audioContext) return;
     
     try {
-      // Initialize if not already done
-      await this.initialize();
-      
-      // Stop any existing audio before starting new
+      // Stop any existing audio
       await this.stop();
-      
-      if (!this.audioContext) return;
 
-      // Create gain node
+      // Create and configure gain node
       this.gainNode = this.audioContext.createGain();
       this.gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
       this.gainNode.connect(this.audioContext.destination);
 
-      // Create oscillators
+      // Create oscillators with stereo panning
       const frequencies = [leftFreq, rightFreq];
-      const panValues = [-1, 1]; // Left and right
+      const panValues = [-1, 1]; // Left and right channels
 
       this.oscillators = frequencies.map((freq, index) => {
         const osc = this.audioContext!.createOscillator();
         const panner = this.audioContext!.createStereoPanner();
         
+        // Configure oscillator
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, this.audioContext!.currentTime);
+        
+        // Configure panner
         panner.pan.setValueAtTime(panValues[index], this.audioContext!.currentTime);
         
+        // Connect nodes
         osc.connect(panner);
         panner.connect(this.gainNode!);
         
@@ -60,10 +62,10 @@ class AudioManager {
       });
 
       // Start oscillators
-      this.oscillators.forEach(osc => osc.start());
+      this.oscillators.forEach(osc => osc.start(0));
 
-      // Fade in
-      this.gainNode.gain.linearRampToValueAtTime(gain, this.audioContext.currentTime + 0.5);
+      // Fade in gain
+      this.gainNode.gain.linearRampToValueAtTime(gain, this.audioContext.currentTime + 0.1);
       this.isPlaying = true;
     } catch (error) {
       console.error('Failed to start audio:', error);
@@ -75,25 +77,23 @@ class AudioManager {
     if (!this.audioContext || !this.isPlaying) return;
 
     try {
-      // Fade out
+      // Quick fade out
       if (this.gainNode) {
         const currentTime = this.audioContext.currentTime;
-        this.gainNode.gain.linearRampToValueAtTime(0, currentTime + 0.2);
+        this.gainNode.gain.linearRampToValueAtTime(0, currentTime + 0.1);
       }
 
-      // Stop and cleanup after fade out
+      // Stop and cleanup after fade
       setTimeout(() => {
-        if (this.oscillators.length > 0) {
-          this.oscillators.forEach(osc => {
-            try {
-              osc.stop();
-              osc.disconnect();
-            } catch (e) {
-              // Ignore errors if oscillator is already stopped
-            }
-          });
-          this.oscillators = [];
-        }
+        this.oscillators.forEach(osc => {
+          try {
+            osc.stop();
+            osc.disconnect();
+          } catch (e) {
+            // Ignore errors if oscillator is already stopped
+          }
+        });
+        this.oscillators = [];
 
         if (this.gainNode) {
           this.gainNode.disconnect();
@@ -101,10 +101,9 @@ class AudioManager {
         }
 
         this.isPlaying = false;
-      }, 250); // Reduced timeout to ensure quicker cleanup
+      }, 150);
     } catch (error) {
       console.error('Failed to stop audio:', error);
-      // Force cleanup in case of error
       this.cleanup();
     }
   }
@@ -116,6 +115,11 @@ class AudioManager {
       this.audioContext = null;
     }
   }
+
+  isInitialized() {
+    return this.audioContext !== null;
+  }
 }
 
+// Export a singleton instance
 export const audioManager = new AudioManager();
