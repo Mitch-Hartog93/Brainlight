@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 class AudioManager {
   private audioContext: AudioContext | null = null;
   private oscillators: OscillatorNode[] = [];
