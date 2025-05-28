@@ -16,15 +16,16 @@ import SessionControls from '@/components/therapy/SessionControls';
 import TherapyStatus from '@/components/therapy/TherapyStatus';
 import FloatingObjects from '@/components/therapy/FloatingObjects';
 import { saveSession } from '@/utils/sessionStorage';
+import { audioManager } from '@/utils/AudioManager';
 
 // Constants
 const FREQUENCY = 40;
 const PERIOD = 1000 / FREQUENCY;
 const HALF_PERIOD = PERIOD / 2;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
-const AUDIO_GAIN = 0.2;
 const LEFT_FREQUENCY = 420;
 const RIGHT_FREQUENCY = 380;
+const AUDIO_GAIN = 0.1;
 
 export default function TherapyScreen() {
   const { isDarkMode } = useTheme();
@@ -45,31 +46,14 @@ export default function TherapyScreen() {
   const [showDurationPicker, setShowDurationPicker] = useState(false);
   const [showTimer, setShowTimer] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
-  const [isAudioInitialized, setIsAudioInitialized] = useState(false);
 
-  // Web Audio API context and nodes
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const leftOscillatorRef = useRef<OscillatorNode | null>(null);
-  const rightOscillatorRef = useRef<OscillatorNode | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
-
-  // Load audio preference on mount and when it changes
+  // Load audio preference on mount
   useEffect(() => {
     loadAudioPreference();
+    audioManager.initialize();
     
-    // Listen for audio preference changes
-    const checkAudioPreference = async () => {
-      const savedPreference = await AsyncStorage.getItem('audio_enabled');
-      const newAudioEnabled = savedPreference === 'true';
-      if (isAudioEnabled !== newAudioEnabled) {
-        setIsAudioEnabled(newAudioEnabled);
-      }
-    };
-
-    const interval = setInterval(checkAudioPreference, 1000);
     return () => {
-      clearInterval(interval);
-      cleanupAudio();
+      audioManager.cleanup();
     };
   }, []);
 
@@ -81,154 +65,6 @@ export default function TherapyScreen() {
       console.error('Error loading audio preference:', error);
     }
   };
-
-  const initializeAudioContext = async () => {
-    if (Platform.OS !== 'web' || isAudioInitialized) return;
-
-    try {
-      // Create new audio context
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      
-      // Resume the context (needed for iOS)
-      if (audioContextRef.current.state === 'suspended') {
-        await audioContextRef.current.resume();
-      }
-      
-      setIsAudioInitialized(true);
-    } catch (error) {
-      console.error('Error initializing audio context:', error);
-    }
-  };
-
-  const cleanupAudio = () => {
-    try {
-      if (gainNodeRef.current) {
-        gainNodeRef.current.disconnect();
-        gainNodeRef.current = null;
-      }
-      if (leftOscillatorRef.current) {
-        leftOscillatorRef.current.stop();
-        leftOscillatorRef.current.disconnect();
-        leftOscillatorRef.current = null;
-      }
-      if (rightOscillatorRef.current) {
-        rightOscillatorRef.current.stop();
-        rightOscillatorRef.current.disconnect();
-        rightOscillatorRef.current = null;
-      }
-    } catch (error) {
-      console.error('Error cleaning up audio:', error);
-    }
-  };
-
-  const startBinauralBeats = async () => {
-    if (!isAudioEnabled || Platform.OS !== 'web') return;
-
-    try {
-      cleanupAudio();
-      
-      if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-        await initializeAudioContext();
-      }
-
-      const ctx = audioContextRef.current;
-      if (!ctx) return;
-
-      // Create and configure gain node
-      gainNodeRef.current = ctx.createGain();
-      gainNodeRef.current.gain.value = 0;
-      gainNodeRef.current.connect(ctx.destination);
-
-      // Create and configure left oscillator
-      leftOscillatorRef.current = ctx.createOscillator();
-      leftOscillatorRef.current.type = 'sine';
-      leftOscillatorRef.current.frequency.setValueAtTime(LEFT_FREQUENCY, ctx.currentTime);
-      
-      // Create stereo panner for left channel
-      const leftPanner = ctx.createStereoPanner();
-      leftPanner.pan.value = -1;
-      leftOscillatorRef.current.connect(leftPanner);
-      leftPanner.connect(gainNodeRef.current);
-
-      // Create and configure right oscillator
-      rightOscillatorRef.current = ctx.createOscillator();
-      rightOscillatorRef.current.type = 'sine';
-      rightOscillatorRef.current.frequency.setValueAtTime(RIGHT_FREQUENCY, ctx.currentTime);
-      
-      // Create stereo panner for right channel
-      const rightPanner = ctx.createStereoPanner();
-      rightPanner.pan.value = 1;
-      rightOscillatorRef.current.connect(rightPanner);
-      rightPanner.connect(gainNodeRef.current);
-
-      // Start oscillators
-      leftOscillatorRef.current.start();
-      rightOscillatorRef.current.start();
-
-      // Gradually increase volume
-      gainNodeRef.current.gain.setValueAtTime(0, ctx.currentTime);
-      gainNodeRef.current.gain.linearRampToValueAtTime(AUDIO_GAIN, ctx.currentTime + 1);
-
-      // Ensure context is running
-      if (ctx.state === 'suspended') {
-        await ctx.resume();
-      }
-    } catch (error) {
-      console.error('Error starting binaural beats:', error);
-    }
-  };
-
-  const stopBinauralBeats = async () => {
-    try {
-      if (gainNodeRef.current && audioContextRef.current) {
-        // Fade out audio
-        const currentTime = audioContextRef.current.currentTime;
-        gainNodeRef.current.gain.linearRampToValueAtTime(0, currentTime + 0.5);
-        
-        // Clean up after fade out
-        setTimeout(cleanupAudio, 500);
-      } else {
-        cleanupAudio();
-      }
-    } catch (error) {
-      console.error('Error stopping binaural beats:', error);
-    }
-  };
-
-  // Monitor audio enabled state changes
-  useEffect(() => {
-    if (isActive) {
-      if (isAudioEnabled) {
-        startBinauralBeats();
-      } else {
-        stopBinauralBeats();
-      }
-    }
-  }, [isAudioEnabled, isActive]);
-
-  const timerStyle = useAnimatedStyle(() => {
-    return {
-      opacity: withSequence(
-        withDelay(2000, withTiming(0, { duration: 1000 })),
-        withDelay(
-          remainingTime > 5 ? (remainingTime - 5) * 1000 : 0,
-          withTiming(1, { duration: 1000 })
-        )
-      ),
-      transform: [
-        {
-          scale: withTiming(0.6, {
-            duration: 1000,
-            easing: Easing.inOut(Easing.cubic),
-          }),
-        },
-      ],
-      top: withTiming(WINDOW_HEIGHT - 200, {
-        duration: 1000,
-        easing: Easing.inOut(Easing.cubic),
-      }),
-    };
-  }, [remainingTime]);
 
   const flicker = (timestamp: number) => {
     if (!lastFrameTimeRef.current) {
@@ -252,22 +88,24 @@ export default function TherapyScreen() {
       isBlackRef.current = false;
       sessionStartTimeRef.current = Date.now();
       animationFrameRef.current = requestAnimationFrame(flicker);
-      if (isAudioEnabled) {
-        startBinauralBeats();
+      
+      if (isAudioEnabled && Platform.OS === 'web') {
+        audioManager.start(LEFT_FREQUENCY, RIGHT_FREQUENCY, AUDIO_GAIN);
       }
+      
       setShowTimer(true);
 
       return () => {
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);
         }
-        stopBinauralBeats();
+        audioManager.stop();
       };
     } else {
       setShowTimer(true);
     }
   }, [isActive]);
-  
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
     
@@ -310,7 +148,7 @@ export default function TherapyScreen() {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
-    stopBinauralBeats();
+    audioManager.stop();
     lastFrameTimeRef.current = 0;
     isBlackRef.current = false;
     setIsBlack(false);
