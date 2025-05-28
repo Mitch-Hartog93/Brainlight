@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, Switch, TouchableOpacity, ScrollView, Linking, Platform } from 'react-native';
 import { BellRing, Info, Moon, Wifi, Volume2, Clock } from 'lucide-react-native';
 import SettingItem from '@/components/settings/SettingItem';
 import TimePickerModal from '@/components/settings/TimePickerModal';
 import { useTheme } from '@/context/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { scheduleDailyReminder, getNotificationTime } from '@/utils/notifications';
+
+const SUPPORT_EMAIL = 'support@brainlight.app';
+const SUPPORT_SUBJECT = 'Brainlight Support Request';
 
 export default function SettingsScreen() {
   const [notifications, setNotifications] = useState(false);
@@ -15,22 +18,18 @@ export default function SettingsScreen() {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [notificationTime, setNotificationTime] = useState(new Date());
 
-  // Load preferences on mount
   useEffect(() => {
     loadPreferences();
   }, []);
 
   const loadPreferences = async () => {
     try {
-      // Load notification preference
       const savedNotificationPreference = await AsyncStorage.getItem('notifications_enabled');
       setNotifications(savedNotificationPreference === 'true');
 
-      // Load notification time
       const savedTime = await getNotificationTime();
       setNotificationTime(savedTime);
 
-      // Load audio preference
       const savedAudioPreference = await AsyncStorage.getItem('audio_enabled');
       setAudioEnabled(savedAudioPreference === 'true');
     } catch (error) {
@@ -67,12 +66,25 @@ export default function SettingsScreen() {
     }
   };
 
-  const showNotImplemented = () => {
-    Alert.alert(
-      "Feature Not Available",
-      "This feature is not implemented in the current version.",
-      [{ text: "OK" }]
-    );
+  const handleContactSupport = async () => {
+    const body = Platform.select({
+      web: undefined,
+      default: `\n\n--------------------\nDevice Information:\nPlatform: ${Platform.OS}\nVersion: ${Platform.Version}`
+    });
+
+    const mailtoUrl = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(SUPPORT_SUBJECT)}${body ? `&body=${encodeURIComponent(body)}` : ''}`;
+    
+    try {
+      const canOpen = await Linking.canOpenURL(mailtoUrl);
+      if (canOpen) {
+        await Linking.openURL(mailtoUrl);
+      } else {
+        // Fallback for web or when mail client is not available
+        await Linking.openURL(`https://brainlight.app/support`);
+      }
+    } catch (error) {
+      console.error('Error opening mail client:', error);
+    }
   };
 
   const formatTime = (date: Date): string => {
@@ -175,7 +187,7 @@ export default function SettingsScreen() {
           description="View our privacy policy"
           isDarkMode={isDarkMode}
           right={<Info size={20} color={isDarkMode ? '#C7C7CC' : '#C7C7CC'} />}
-          onPress={showNotImplemented}
+          onPress={() => Linking.openURL('https://brainlight.app/privacy')}
         />
         <SettingItem
           icon={<Info size={22} color="#0066CC" />}
@@ -183,7 +195,7 @@ export default function SettingsScreen() {
           description="View our terms of service"
           isDarkMode={isDarkMode}
           right={<Info size={20} color={isDarkMode ? '#C7C7CC' : '#C7C7CC'} />}
-          onPress={showNotImplemented}
+          onPress={() => Linking.openURL('https://brainlight.app/terms')}
           showBorder={false}
         />
       </View>
@@ -193,7 +205,10 @@ export default function SettingsScreen() {
         <Text style={[styles.versionNumber, isDarkMode && { color: '#8E8E93' }]}>Version 1.0.0</Text>
       </View>
       
-      <TouchableOpacity style={styles.contactButton} onPress={showNotImplemented}>
+      <TouchableOpacity 
+        style={styles.contactButton}
+        onPress={handleContactSupport}
+      >
         <Text style={styles.contactButtonText}>Contact Support</Text>
       </TouchableOpacity>
 
