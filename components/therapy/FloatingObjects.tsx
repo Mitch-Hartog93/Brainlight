@@ -12,13 +12,13 @@ import Animated, {
 import { Heart, Star } from 'lucide-react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const OBJECT_SIZE = 24; // Reduced size
+const OBJECT_SIZE = 36; // Increased size
 const START_X = -OBJECT_SIZE;
 const END_X = SCREEN_WIDTH + OBJECT_SIZE;
 
 const OBJECTS = [
-  { component: Heart, color: 'rgba(255, 107, 107, 0.6)' }, // More transparent
-  { component: Star, color: 'rgba(255, 238, 173, 0.6)' }, // More transparent
+  { component: Heart, color: '#FF6B6B' }, // Solid colors
+  { component: Star, color: '#FFD700' }, // Brighter yellow for stars
 ];
 
 interface FloatingObjectProps {
@@ -61,7 +61,7 @@ const FloatingObject = ({
 
     setTimeout(moveHorizontal, delay);
 
-    const floatRange = 30; // Reduced range
+    const floatRange = 40; // Increased range
     translateY.value = withDelay(
       delay,
       withRepeat(
@@ -93,7 +93,7 @@ const FloatingObject = ({
     );
 
     const checkInterval = setInterval(() => {
-      if (isYellowStar && !hasCounted.current && translateX.value > 0) {
+      if (isYellowStar && !hasCounted.current && translateX.value > SCREEN_WIDTH / 2) {
         hasCounted.current = true;
         onStarPass?.();
       }
@@ -117,7 +117,7 @@ const FloatingObject = ({
       <ObjectComponent 
         size={OBJECT_SIZE} 
         color={color}
-        strokeWidth={1}
+        strokeWidth={2} // Increased stroke width for better visibility
       />
     </Animated.View>
   );
@@ -128,7 +128,7 @@ interface FloatingObjectsProps {
 }
 
 export default function FloatingObjects({ onStarPass }: FloatingObjectsProps) {
-  const objects = [...Array(8)].map((_, index) => ({ // Reduced number of objects
+  const objects = [...Array(6)].map((_, index) => ({ // Reduced number of objects for less clutter
     ...OBJECTS[index % OBJECTS.length],
     isYellowStar: OBJECTS[index % OBJECTS.length].component === Star
   }));
@@ -138,8 +138,8 @@ export default function FloatingObjects({ onStarPass }: FloatingObjectsProps) {
       {objects.map((object, index) => (
         <FloatingObject
           key={index}
-          delay={index * 2500} // Increased delay between objects
-          duration={15000} // Increased duration for slower movement
+          delay={index * 3000} // Increased delay between objects
+          duration={12000} // Adjusted duration for smoother movement
           startY={100 + Math.random() * (Dimensions.get('window').height - 200)}
           ObjectComponent={object.component}
           color={object.color}
