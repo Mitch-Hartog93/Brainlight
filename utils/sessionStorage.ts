@@ -1,33 +1,29 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TherapySession, SessionStats } from '@/types/session';
 
 const SESSIONS_STORAGE_KEY = 'brainlight_sessions';
 
-export interface Session {
-  date: Date;
-  duration: number; // planned duration in seconds
-  actualDuration?: number; // actual duration in seconds
-  completed: boolean;
-}
-
-export const saveSession = async (session: Session): Promise<void> => {
+export const saveSession = async (session: Omit<TherapySession, 'id'>): Promise<void> => {
   try {
-    // Get existing sessions
     const existingSessions = await getSessions();
+    const newSession = {
+      ...session,
+      id: generateSessionId(),
+    };
     
-    // Add new session
-    const updatedSessions = [...existingSessions, session];
+    const updatedSessions = [...existingSessions, newSession];
     
-    // Save to storage
     await AsyncStorage.setItem(
       SESSIONS_STORAGE_KEY, 
       JSON.stringify(updatedSessions)
     );
   } catch (error) {
     console.error('Error saving session:', error);
+    throw new Error('Failed to save session');
   }
 };
 
-export const getSessions = async (): Promise<Session[]> => {
+export const getSessions = async (): Promise<TherapySession[]> => {
   try {
     const sessionsJSON = await AsyncStorage.getItem(SESSIONS_STORAGE_KEY);
     
@@ -46,10 +42,29 @@ export const getSessions = async (): Promise<Session[]> => {
   }
 };
 
+export const getSessionStats = async (): Promise<SessionStats> => {
+  const sessions = await getSessions();
+  
+  const stats: SessionStats = {
+    totalSessions: sessions.length,
+    completedSessions: sessions.filter(s => s.completed).length,
+    totalMinutes: Math.round(sessions.reduce((acc, s) => acc + s.actualDuration / 60, 0)),
+    averageDuration: sessions.length ? 
+      Math.round(sessions.reduce((acc, s) => acc + s.actualDuration, 0) / sessions.length) : 0
+  };
+  
+  return stats;
+};
+
 export const clearSessions = async (): Promise<void> => {
   try {
     await AsyncStorage.removeItem(SESSIONS_STORAGE_KEY);
   } catch (error) {
     console.error('Error clearing sessions:', error);
+    throw new Error('Failed to clear sessions');
   }
+};
+
+const generateSessionId = (): string => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
