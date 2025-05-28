@@ -11,20 +11,22 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Heart, Star } from 'lucide-react-native';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const OBJECT_SIZE = 36; // Increased size
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const OBJECT_SIZE = 36;
 const START_X = -OBJECT_SIZE;
 const END_X = SCREEN_WIDTH + OBJECT_SIZE;
+const CENTER_Y = SCREEN_HEIGHT / 2;
+const VERTICAL_RANGE = SCREEN_HEIGHT * 0.3; // 30% of screen height for vertical movement
 
 const OBJECTS = [
-  { component: Heart, color: '#FF6B6B' }, // Solid colors
-  { component: Star, color: '#FFD700' }, // Brighter yellow for stars
+  { component: Heart, color: '#FF6B6B' },
+  { component: Star, color: '#FFD700' },
 ];
 
 interface FloatingObjectProps {
   delay: number;
   duration: number;
-  startY: number;
+  verticalOffset: number;
   ObjectComponent: typeof Heart | typeof Star;
   color: string;
   onStarPass?: () => void;
@@ -34,14 +36,14 @@ interface FloatingObjectProps {
 const FloatingObject = ({ 
   delay, 
   duration, 
-  startY, 
+  verticalOffset,
   ObjectComponent, 
   color,
   onStarPass,
   isYellowStar
 }: FloatingObjectProps) => {
   const translateX = useSharedValue(START_X);
-  const translateY = useSharedValue(startY);
+  const translateY = useSharedValue(CENTER_Y + verticalOffset);
   const rotation = useSharedValue(0);
   const hasCounted = useRef(false);
 
@@ -61,16 +63,16 @@ const FloatingObject = ({
 
     setTimeout(moveHorizontal, delay);
 
-    const floatRange = 40; // Increased range
+    const floatRange = 40;
     translateY.value = withDelay(
       delay,
       withRepeat(
         withSequence(
-          withTiming(startY - floatRange, {
+          withTiming(CENTER_Y + verticalOffset - floatRange, {
             duration: duration / 4,
             easing: Easing.inOut(Easing.sin),
           }),
-          withTiming(startY + floatRange, {
+          withTiming(CENTER_Y + verticalOffset + floatRange, {
             duration: duration / 4,
             easing: Easing.inOut(Easing.sin),
           })
@@ -117,7 +119,7 @@ const FloatingObject = ({
       <ObjectComponent 
         size={OBJECT_SIZE} 
         color={color}
-        strokeWidth={2} // Increased stroke width for better visibility
+        strokeWidth={2}
       />
     </Animated.View>
   );
@@ -128,8 +130,12 @@ interface FloatingObjectsProps {
 }
 
 export default function FloatingObjects({ onStarPass }: FloatingObjectsProps) {
-  const objects = [...Array(6)].map((_, index) => ({ // Reduced number of objects for less clutter
+  // Create vertical offsets that are more centered
+  const verticalOffsets = [-VERTICAL_RANGE/2, -VERTICAL_RANGE/4, 0, VERTICAL_RANGE/4, VERTICAL_RANGE/2];
+  
+  const objects = verticalOffsets.map((offset, index) => ({
     ...OBJECTS[index % OBJECTS.length],
+    verticalOffset: offset,
     isYellowStar: OBJECTS[index % OBJECTS.length].component === Star
   }));
 
@@ -138,9 +144,9 @@ export default function FloatingObjects({ onStarPass }: FloatingObjectsProps) {
       {objects.map((object, index) => (
         <FloatingObject
           key={index}
-          delay={index * 3000} // Increased delay between objects
-          duration={12000} // Adjusted duration for smoother movement
-          startY={100 + Math.random() * (Dimensions.get('window').height - 200)}
+          delay={index * 3000}
+          duration={12000}
+          verticalOffset={object.verticalOffset}
           ObjectComponent={object.component}
           color={object.color}
           onStarPass={object.isYellowStar ? onStarPass : undefined}
