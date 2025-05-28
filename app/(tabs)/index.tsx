@@ -22,8 +22,7 @@ const FREQUENCY = 40;
 const PERIOD = 1000 / FREQUENCY;
 const HALF_PERIOD = PERIOD / 2;
 const WINDOW_HEIGHT = Dimensions.get('window').height;
-
-// Audio frequencies for 40Hz binaural beats
+const AUDIO_GAIN = 0.2; // Increased from 0.1 for better audibility
 const LEFT_FREQUENCY = 420;
 const RIGHT_FREQUENCY = 380;
 
@@ -113,10 +112,11 @@ export default function TherapyScreen() {
     try {
       cleanupAudio();
 
-      audioContextRef.current = new AudioContext();
+      // Create new audio context
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
       const ctx = audioContextRef.current;
 
-      // Create and configure gain node
+      // Create and configure gain node with higher initial volume
       gainNodeRef.current = ctx.createGain();
       gainNodeRef.current.gain.value = 0;
       gainNodeRef.current.connect(ctx.destination);
@@ -147,9 +147,14 @@ export default function TherapyScreen() {
       leftOscillatorRef.current.start();
       rightOscillatorRef.current.start();
 
-      // Gradually increase volume
+      // Gradually increase volume over 1 second
       gainNodeRef.current.gain.setValueAtTime(0, ctx.currentTime);
-      gainNodeRef.current.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.5);
+      gainNodeRef.current.gain.linearRampToValueAtTime(AUDIO_GAIN, ctx.currentTime + 1);
+
+      // Resume audio context if it's suspended
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
     } catch (error) {
       console.error('Error starting binaural beats:', error);
     }
