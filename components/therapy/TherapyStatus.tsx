@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     marginTop: 0,
-    paddingTop: 120, // Increased from 80 to move it even higher
+    paddingTop: 40,
   },
   statusContainer: {
     flexDirection: 'row',
