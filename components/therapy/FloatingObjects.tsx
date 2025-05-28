@@ -15,7 +15,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const OBJECT_SIZE = 30;
 const START_X = -OBJECT_SIZE;
 const END_X = SCREEN_WIDTH + OBJECT_SIZE;
-const COUNTING_THRESHOLD = SCREEN_WIDTH / 2;
 
 const OBJECTS = [
   { component: Heart, color: '#FF6B6B' },
@@ -44,18 +43,18 @@ const FloatingObject = ({
   const translateX = useSharedValue(START_X);
   const translateY = useSharedValue(startY);
   const rotation = useSharedValue(0);
-  const hasCrossedThreshold = useRef(false);
+  const hasCounted = useRef(false);
 
   useEffect(() => {
     // Horizontal movement (left to right only)
     const moveHorizontal = () => {
       translateX.value = START_X;
+      hasCounted.current = false;
       translateX.value = withTiming(END_X, {
         duration,
         easing: Easing.linear,
       }, (finished) => {
         if (finished) {
-          hasCrossedThreshold.current = false;
           moveHorizontal();
         }
       });
@@ -97,13 +96,10 @@ const FloatingObject = ({
       )
     );
 
-    // Check for star crossing threshold
+    // Check for star crossing the screen
     const checkInterval = setInterval(() => {
-      const currentX = translateX.value;
-      
-      // Only count yellow stars crossing from left to right
-      if (isYellowStar && !hasCrossedThreshold.current && currentX >= COUNTING_THRESHOLD) {
-        hasCrossedThreshold.current = true;
+      if (isYellowStar && !hasCounted.current && translateX.value > 0) {
+        hasCounted.current = true;
         onStarPass?.();
       }
     }, 50);
@@ -134,6 +130,7 @@ interface FloatingObjectsProps {
 }
 
 export default function FloatingObjects({ onStarPass }: FloatingObjectsProps) {
+  // Create 5 stars and 5 hearts alternating
   const objects = [...Array(10)].map((_, index) => ({
     ...OBJECTS[index % OBJECTS.length],
     isYellowStar: OBJECTS[index % OBJECTS.length].component === Star
@@ -145,7 +142,7 @@ export default function FloatingObjects({ onStarPass }: FloatingObjectsProps) {
         <FloatingObject
           key={index}
           delay={index * 2000}
-          duration={10000 + Math.random() * 4000} // Slower movement for better visibility
+          duration={12000} // Fixed duration for consistent timing
           startY={100 + Math.random() * (Dimensions.get('window').height - 200)}
           ObjectComponent={object.component}
           color={object.color}
