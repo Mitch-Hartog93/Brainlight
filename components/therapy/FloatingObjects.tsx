@@ -13,7 +13,9 @@ import { Heart, Star } from 'lucide-react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const OBJECT_SIZE = 30;
-const CENTER_X = SCREEN_WIDTH / 2;
+const START_X = -OBJECT_SIZE;
+const END_X = SCREEN_WIDTH + OBJECT_SIZE;
+const COUNTING_THRESHOLD = SCREEN_WIDTH / 2;
 
 const OBJECTS = [
   { component: Heart, color: '#FF6B6B' },
@@ -39,17 +41,17 @@ const FloatingObject = ({
   onStarPass,
   isYellowStar
 }: FloatingObjectProps) => {
-  const translateX = useSharedValue(-OBJECT_SIZE);
+  const translateX = useSharedValue(START_X);
   const translateY = useSharedValue(startY);
   const rotation = useSharedValue(0);
-  const hasPassed = useRef(false);
-  const hasPassedCenter = useRef(false);
+  const hasCrossedThreshold = useRef(false);
 
   useEffect(() => {
+    // Horizontal movement (left to right only)
     translateX.value = withDelay(
       delay,
       withRepeat(
-        withTiming(SCREEN_WIDTH + OBJECT_SIZE, {
+        withTiming(END_X, {
           duration,
           easing: Easing.linear,
         }),
@@ -58,6 +60,7 @@ const FloatingObject = ({
       )
     );
 
+    // Gentle vertical floating motion
     translateY.value = withDelay(
       delay,
       withRepeat(
@@ -76,11 +79,12 @@ const FloatingObject = ({
       )
     );
 
+    // Smooth rotation
     rotation.value = withDelay(
       delay,
       withRepeat(
         withTiming(360, {
-          duration: duration * 3,
+          duration: duration * 2,
           easing: Easing.linear,
         }),
         -1,
@@ -88,22 +92,24 @@ const FloatingObject = ({
       )
     );
 
-    // Check if star passes center of screen
-    const intervalId = setInterval(() => {
-      const xPos = translateX.value;
+    // Check for star crossing threshold
+    const checkInterval = setInterval(() => {
+      const currentX = translateX.value;
       
-      if (isYellowStar && !hasPassedCenter.current && xPos >= CENTER_X) {
-        hasPassedCenter.current = true;
+      // Only count yellow stars crossing from left to right
+      if (isYellowStar && !hasCrossedThreshold.current && currentX >= COUNTING_THRESHOLD) {
+        hasCrossedThreshold.current = true;
         onStarPass?.();
       }
       
-      // Reset when object goes off screen
-      if (xPos <= -OBJECT_SIZE) {
-        hasPassedCenter.current = false;
+      // Reset when object goes off screen to the right
+      if (currentX >= END_X) {
+        hasCrossedThreshold.current = false;
+        translateX.value = START_X;
       }
-    }, 100);
+    }, 50);
 
-    return () => clearInterval(intervalId);
+    return () => clearInterval(checkInterval);
   }, []);
 
   const style = useAnimatedStyle(() => ({
@@ -138,7 +144,7 @@ export default function FloatingObjects({ onStarPass }: FloatingObjectsProps) {
         <FloatingObject
           key={index}
           delay={index * 2000}
-          duration={6000 + Math.random() * 4000}
+          duration={8000 + Math.random() * 4000}
           startY={100 + Math.random() * (Dimensions.get('window').height - 200)}
           ObjectComponent={object.component}
           color={object.color}
