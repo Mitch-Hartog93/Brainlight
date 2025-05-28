@@ -22,7 +22,6 @@ import { audioManager } from '@/utils/AudioManager';
 const FREQUENCY = 40;
 const PERIOD = 1000 / FREQUENCY;
 const HALF_PERIOD = PERIOD / 2;
-const WINDOW_HEIGHT = Dimensions.get('window').height;
 const LEFT_FREQUENCY = 420;
 const RIGHT_FREQUENCY = 380;
 const AUDIO_GAIN = 0.1;
@@ -46,6 +45,24 @@ export default function TherapyScreen() {
   const [showDurationPicker, setShowDurationPicker] = useState(false);
   const [showTimer, setShowTimer] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+
+  useEffect(() => {
+    loadAudioPreference();
+    audioManager.initialize();
+    
+    return () => {
+      audioManager.cleanup();
+    };
+  }, []);
+
+  const loadAudioPreference = async () => {
+    try {
+      const savedPreference = await AsyncStorage.getItem('audio_enabled');
+      setIsAudioEnabled(savedPreference === 'true');
+    } catch (error) {
+      console.error('Error loading audio preference:', error);
+    }
+  };
 
   const timerStyle = useAnimatedStyle(() => {
     const shouldShow = remainingTime > 0 && (
@@ -71,26 +88,9 @@ export default function TherapyScreen() {
       right: 0,
       top: '50%',
       marginTop: -120, // Half of the timer height to center it
+      zIndex: 5, // Place timer below the status text
     };
   }, [remainingTime, isActive, duration]);
-
-  useEffect(() => {
-    loadAudioPreference();
-    audioManager.initialize();
-    
-    return () => {
-      audioManager.cleanup();
-    };
-  }, []);
-
-  const loadAudioPreference = async () => {
-    try {
-      const savedPreference = await AsyncStorage.getItem('audio_enabled');
-      setIsAudioEnabled(savedPreference === 'true');
-    } catch (error) {
-      console.error('Error loading audio preference:', error);
-    }
-  };
 
   useEffect(() => {
     if (isActive) {
@@ -360,6 +360,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
+  darkContainer: {
+    backgroundColor: '#000000',
+  },
   scrollView: {
     flex: 1,
   },
@@ -383,6 +386,7 @@ const styles = StyleSheet.create({
   statusContainer: {
     width: '100%',
     paddingTop: 20,
+    zIndex: 10, // Place status text above timer
   },
   timerContainer: {
     alignItems: 'center',
@@ -439,17 +443,27 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+  darkSessionCard: {
+    backgroundColor: '#1C1C1E',
+    borderColor: '#2C2C2E',
+  },
   cardTitle: {
     fontSize: 24,
     fontWeight: '700',
     color: '#1E293B',
     marginBottom: 8,
   },
+  darkText: {
+    color: '#FFFFFF',
+  },
   cardDescription: {
     fontSize: 16,
     color: '#64748B',
     marginBottom: 24,
     lineHeight: 24,
+  },
+  darkDescription: {
+    color: '#E5E5EA',
   },
   startButton: {
     flexDirection: 'row',
@@ -484,6 +498,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
+    zIndex: 10,
   },
   stopButtonText: {
     color: '#FFFFFF',
@@ -498,6 +513,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
+  darkInfoBox: {
+    backgroundColor: '#1C1C1E',
+    borderColor: '#2C2C2E',
+  },
   infoTitle: {
     fontSize: 18,
     fontWeight: '600',
@@ -509,6 +528,9 @@ const styles = StyleSheet.create({
     color: '#475569',
     marginBottom: 12,
     lineHeight: 24,
+  },
+  darkInfoText: {
+    color: '#E5E5EA',
   },
   modalOverlay: {
     flex: 1,
@@ -565,25 +587,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-  },
-  darkContainer: {
-    backgroundColor: '#000000',
-  },
-  darkSessionCard: {
-    backgroundColor: '#1C1C1E',
-    borderColor: '#2C2C2E',
-  },
-  darkText: {
-    color: '#FFFFFF',
-  },
-  darkDescription: {
-    color: '#E5E5EA',
-  },
-  darkInfoBox: {
-    backgroundColor: '#1C1C1E',
-    borderColor: '#2C2C2E',
-  },
-  darkInfoText: {
-    color: '#E5E5EA',
   },
 });
