@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     marginTop: 0,
-    paddingTop: 40,
+    paddingTop: 20,
   },
   statusContainer: {
     flexDirection: 'row',
