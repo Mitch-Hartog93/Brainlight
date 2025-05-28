@@ -39,13 +39,20 @@ class AudioManager {
   }
 
   async start(leftFreq: number, rightFreq: number, gain: number = 0.1) {
-    if (Platform.OS !== 'web' || !this.audioContext) return;
+    if (Platform.OS !== 'web') return;
     
     try {
       // Ensure we're starting fresh
       await this.stop();
       await this.cleanup();
       
+      // Re-initialize the audio context after cleanup
+      await this.initialize();
+      
+      if (!this.audioContext) {
+        throw new Error('Failed to initialize audio context');
+      }
+
       // Ensure context is running
       if (this.audioContext.state !== 'running') {
         await this.audioContext.resume();
