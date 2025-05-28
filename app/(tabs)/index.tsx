@@ -47,21 +47,33 @@ export default function TherapyScreen() {
   const [showTimer, setShowTimer] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
 
-  // Define timerStyle using useAnimatedStyle
   const timerStyle = useAnimatedStyle(() => {
-    return {
-      top: withTiming(showTimer ? insets.top + 20 : -200, {
-        duration: 300,
-        easing: Easing.inOut(Easing.ease)
-      }),
-      opacity: withTiming(showTimer ? 1 : 0, {
-        duration: 300,
-        easing: Easing.inOut(Easing.ease)
-      })
-    };
-  }, [showTimer, insets.top]);
+    const shouldShow = remainingTime > 0 && (
+      remainingTime <= 5 || // Show in last 5 seconds
+      (isActive && remainingTime >= duration * 60 - 2) // Show in first 2 seconds
+    );
 
-  // Load audio preference on mount
+    return {
+      opacity: withTiming(shouldShow ? 1 : 0, {
+        duration: 500,
+        easing: Easing.inOut(Easing.ease),
+      }),
+      transform: [
+        {
+          scale: withTiming(shouldShow ? 1 : 0.8, {
+            duration: 500,
+            easing: Easing.inOut(Easing.ease),
+          }),
+        },
+      ],
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: '50%',
+      marginTop: -120, // Half of the timer height to center it
+    };
+  }, [remainingTime, isActive, duration]);
+
   useEffect(() => {
     loadAudioPreference();
     audioManager.initialize();
@@ -80,7 +92,6 @@ export default function TherapyScreen() {
     }
   };
 
-  // Effect to handle audio state changes
   useEffect(() => {
     if (isActive) {
       if (isAudioEnabled && Platform.OS === 'web') {
@@ -374,10 +385,10 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   timerContainer: {
-    position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
+    height: 240,
   },
   heroContainer: {
     height: 400,
