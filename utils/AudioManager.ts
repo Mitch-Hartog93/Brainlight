@@ -98,43 +98,33 @@ class AudioManager {
     if (!this.audioContext || !this.isPlaying) return;
 
     try {
-      // Immediate fade out
+      // Immediately stop all oscillators
+      this.oscillators.forEach(osc => {
+        try {
+          osc.stop();
+          osc.disconnect();
+        } catch (e) {
+          // Ignore errors if oscillator is already stopped
+        }
+      });
+      this.oscillators = [];
+
+      // Immediately disconnect gain node
       if (this.gainNode) {
-        const currentTime = this.audioContext.currentTime;
-        this.gainNode.gain.cancelScheduledValues(currentTime);
-        this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, currentTime);
-        this.gainNode.gain.linearRampToValueAtTime(0, currentTime + 0.05);
+        this.gainNode.gain.cancelScheduledValues(this.audioContext.currentTime);
+        this.gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+        this.gainNode.disconnect();
+        this.gainNode = null;
       }
 
-      // Stop everything after the fade
-      setTimeout(() => {
-        try {
-          // Stop and disconnect oscillators
-          this.oscillators.forEach(osc => {
-            try {
-              osc.stop();
-              osc.disconnect();
-            } catch (e) {
-              // Ignore errors if oscillator is already stopped
-            }
-          });
-          this.oscillators = [];
-
-          // Disconnect gain node
-          if (this.gainNode) {
-            this.gainNode.disconnect();
-            this.gainNode = null;
-          }
-
-          this.isPlaying = false;
-        } catch (error) {
-          console.error('Error during cleanup:', error);
-        }
-      }, 100); // Reduced timeout to ensure quicker cleanup
+      this.isPlaying = false;
+      
+      // Cleanup the audio context
+      await this.cleanup();
     } catch (error) {
       console.error('Failed to stop audio:', error);
       // Force cleanup on error
-      this.cleanup();
+      await this.cleanup();
     }
   }
 
