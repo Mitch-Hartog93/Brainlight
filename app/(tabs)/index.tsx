@@ -37,6 +37,7 @@ export default function TherapyScreen() {
   const [starCount, setStarCount] = useState(0);
   const [showInstructionModal, setShowInstructionModal] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [showObjects, setShowObjects] = useState(false);
   
   const [isActive, setIsActive] = useState(false);
   const [duration, setDuration] = useState(10);
@@ -86,23 +87,19 @@ export default function TherapyScreen() {
       position: 'absolute',
       left: 0,
       right: 0,
-      top: '50%',
-      marginTop: -120, // Half of the timer height to center it
-      zIndex: 5, // Place timer below the status text
+      top: '40%',
+      zIndex: 5,
     };
   }, [remainingTime, isActive, duration]);
 
   useEffect(() => {
-    if (isActive) {
-      if (isAudioEnabled && Platform.OS === 'web') {
-        audioManager.start(LEFT_FREQUENCY, RIGHT_FREQUENCY, AUDIO_GAIN);
-      } else {
-        audioManager.stop();
-      }
+    // Show objects after timer disappears (2 seconds after session starts)
+    if (isActive && remainingTime <= duration * 60 - 2) {
+      setShowObjects(true);
     } else {
-      audioManager.stop();
+      setShowObjects(false);
     }
-  }, [isAudioEnabled, isActive]);
+  }, [remainingTime, isActive, duration]);
 
   const flicker = (timestamp: number) => {
     if (!lastFrameTimeRef.current) {
@@ -132,6 +129,7 @@ export default function TherapyScreen() {
       }
       
       setShowTimer(true);
+      setShowObjects(false);
 
       return () => {
         if (animationFrameRef.current) {
@@ -141,8 +139,21 @@ export default function TherapyScreen() {
       };
     } else {
       setShowTimer(true);
+      setShowObjects(false);
     }
   }, [isActive]);
+
+  useEffect(() => {
+    if (isActive) {
+      if (isAudioEnabled && Platform.OS === 'web') {
+        audioManager.start(LEFT_FREQUENCY, RIGHT_FREQUENCY, AUDIO_GAIN);
+      } else {
+        audioManager.stop();
+      }
+    } else {
+      audioManager.stop();
+    }
+  }, [isAudioEnabled, isActive]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -191,6 +202,7 @@ export default function TherapyScreen() {
     isBlackRef.current = false;
     setIsBlack(false);
     setShowTimer(true);
+    setShowObjects(false);
     setShowCompletionModal(true);
     
     saveSession({
@@ -214,7 +226,9 @@ export default function TherapyScreen() {
         styles.flickerContainer,
         { backgroundColor: isBlack ? '#000000' : '#FFFFFF' }
       ]}>
-        <FloatingObjects onStarPass={handleStarPass} />
+        {showObjects && (
+          <FloatingObjects onStarPass={handleStarPass} />
+        )}
         <View style={styles.contentOverlay}>
           <View style={styles.statusContainer}>
             <TherapyStatus isActive={isActive} frequency={FREQUENCY} />
@@ -386,7 +400,7 @@ const styles = StyleSheet.create({
   statusContainer: {
     width: '100%',
     paddingTop: 20,
-    zIndex: 10, // Place status text above timer
+    zIndex: 10,
   },
   timerContainer: {
     alignItems: 'center',
