@@ -7,7 +7,7 @@ import { useTheme } from '@/context/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { scheduleDailyReminder, getNotificationTime } from '@/utils/notifications';
 
-const SUPPORT_EMAIL = 'support@brainlight.app';
+const SUPPORT_EMAIL = 'mhartog.93@gmail.com';
 const SUPPORT_SUBJECT = 'Brainlight Support Request';
 
 export default function SettingsScreen() {
