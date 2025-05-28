@@ -59,8 +59,8 @@ export default function TherapyStatus({ isActive, frequency }: TherapyStatusProp
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    marginTop: 0, // Reduced from 20
-    paddingTop: 40, // Increased from 20
+    marginTop: 0,
+    paddingTop: 80, // Increased from 40 to move it higher
   },
   statusContainer: {
     flexDirection: 'row',
