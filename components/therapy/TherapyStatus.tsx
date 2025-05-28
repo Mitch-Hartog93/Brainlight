@@ -11,7 +11,6 @@ export default function TherapyStatus({ isActive, frequency }: TherapyStatusProp
   
   useEffect(() => {
     if (isActive) {
-      // Create a pulsing animation for the active indicator
       Animated.loop(
         Animated.sequence([
           Animated.timing(animation, {
@@ -60,7 +59,8 @@ export default function TherapyStatus({ isActive, frequency }: TherapyStatusProp
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    marginTop: 60,
+    marginTop: 20,
+    paddingTop: 20,
   },
   statusContainer: {
     flexDirection: 'row',
