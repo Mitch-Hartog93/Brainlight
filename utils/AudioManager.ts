@@ -10,6 +10,7 @@ class AudioManager {
     if (Platform.OS !== 'web') return;
 
     try {
+      // Only create a new context if one doesn't exist
       if (!this.audioContext) {
         // Create new context with explicit options
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
@@ -17,10 +18,24 @@ class AudioManager {
           sampleRate: 44100
         });
       }
-      
-      // Resume context if suspended
+
+      // Ensure context is running
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume();
+      }
+
+      // Add user interaction handler if needed
+      if (this.audioContext.state !== 'running') {
+        const unlockAudio = async () => {
+          if (this.audioContext?.state !== 'running') {
+            await this.audioContext?.resume();
+          }
+          document.removeEventListener('click', unlockAudio);
+          document.removeEventListener('touchstart', unlockAudio);
+        };
+        
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('touchstart', unlockAudio);
       }
     } catch (error) {
       console.error('Failed to initialize audio context:', error);
@@ -28,9 +43,14 @@ class AudioManager {
   }
 
   async start(leftFreq: number, rightFreq: number, gain: number = 0.1) {
-    if (Platform.OS !== 'web' || !this.audioContext || this.isPlaying) return;
+    if (Platform.OS !== 'web' || !this.audioContext) return;
     
     try {
+      // Ensure context is running
+      if (this.audioContext.state !== 'running') {
+        await this.audioContext.resume();
+      }
+
       // Stop any existing audio
       await this.stop();
 
@@ -118,7 +138,7 @@ class AudioManager {
   }
 
   isInitialized() {
-    return this.audioContext !== null;
+    return this.audioContext !== null && this.audioContext.state === 'running';
   }
 }
 
