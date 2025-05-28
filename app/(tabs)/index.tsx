@@ -47,17 +47,6 @@ export default function TherapyScreen() {
   const [showTimer, setShowTimer] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
 
-  // Add timerStyle definition using useAnimatedStyle
-  const timerStyle = useAnimatedStyle(() => {
-    return {
-      top: WINDOW_HEIGHT / 2 - 120, // Center vertically, accounting for timer height
-      opacity: withTiming(showTimer ? 1 : 0, {
-        duration: 300,
-        easing: Easing.inOut(Easing.ease)
-      })
-    };
-  }, [showTimer]);
-
   // Load audio preference on mount
   useEffect(() => {
     loadAudioPreference();
@@ -85,6 +74,8 @@ export default function TherapyScreen() {
       } else {
         audioManager.stop();
       }
+    } else {
+      audioManager.stop();
     }
   }, [isAudioEnabled, isActive]);
 

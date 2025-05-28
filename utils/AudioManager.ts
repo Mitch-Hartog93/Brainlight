@@ -28,7 +28,7 @@ class AudioManager {
   }
 
   async start(leftFreq: number, rightFreq: number, gain: number = 0.1) {
-    if (Platform.OS !== 'web' || !this.audioContext) return;
+    if (Platform.OS !== 'web' || !this.audioContext || this.isPlaying) return;
     
     try {
       // Stop any existing audio
@@ -110,10 +110,11 @@ class AudioManager {
 
   cleanup() {
     this.stop();
-    if (this.audioContext) {
+    if (this.audioContext && this.audioContext.state !== 'closed') {
       this.audioContext.close();
       this.audioContext = null;
     }
+    this.isPlaying = false;
   }
 
   isInitialized() {
