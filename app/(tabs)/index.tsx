@@ -220,94 +220,92 @@ export default function TherapyScreen() {
     setShowDurationPicker(false);
   };
 
-  if (isActive) {
-    return (
-      <View style={[
-        styles.flickerContainer,
-        { backgroundColor: isBlack ? '#000000' : '#FFFFFF' }
-      ]}>
-        {showObjects && (
-          <FloatingObjects onStarPass={handleStarPass} />
-        )}
-        <View style={styles.contentOverlay}>
-          <View style={styles.statusContainer}>
-            <TherapyStatus isActive={isActive} frequency={FREQUENCY} />
-          </View>
-          <Animated.View style={[styles.timerContainer, timerStyle]}>
-            <Timer remainingTime={remainingTime} progress={progress} />
-          </Animated.View>
-          <TouchableOpacity
-            style={styles.stopButton}
-            onPress={endSession}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.stopButtonText}>STOP SESSION</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.heroContainer}>
-          <Image
-            source={{ uri: 'https://images.pexels.com/photos/3768114/pexels-photo-3768114.jpeg' }}
-            style={styles.heroImage}
-            resizeMode="cover"
-          />
-          <View style={styles.heroOverlay}>
-            <View style={styles.heroContent}>
-              <Text style={styles.heroTitle}>Compassionate Light Therapy for Alzheimer's Care</Text>
-              <Text style={styles.heroSubtitle}>
-                A scientifically-designed 40Hz light therapy to support cognitive function and enhance quality of life.
+      {isActive ? (
+        <View style={[
+          styles.flickerContainer,
+          { backgroundColor: isBlack ? '#000000' : '#FFFFFF' }
+        ]}>
+          {showObjects && (
+            <FloatingObjects onStarPass={handleStarPass} />
+          )}
+          <View style={styles.contentOverlay}>
+            <View style={styles.statusContainer}>
+              <TherapyStatus isActive={isActive} frequency={FREQUENCY} />
+            </View>
+            <Animated.View style={[styles.timerContainer, timerStyle]}>
+              <Timer remainingTime={remainingTime} progress={progress} />
+            </Animated.View>
+            <TouchableOpacity
+              style={styles.stopButton}
+              onPress={endSession}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.stopButtonText}>STOP SESSION</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : (
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.heroContainer}>
+            <Image
+              source={{ uri: 'https://images.pexels.com/photos/3768114/pexels-photo-3768114.jpeg' }}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
+            <View style={styles.heroOverlay}>
+              <View style={styles.heroContent}>
+                <Text style={styles.heroTitle}>Compassionate Light Therapy for Alzheimer's Care</Text>
+                <Text style={styles.heroSubtitle}>
+                  A scientifically-designed 40Hz light therapy to support cognitive function and enhance quality of life.
+                </Text>
+              </View>
+            </View>
+          </View>
+          
+          <View style={styles.contentContainer}>
+            <View style={[styles.sessionCard, isDarkMode && styles.darkSessionCard]}>
+              <Text style={[styles.cardTitle, isDarkMode && styles.darkText]}>Begin Your Therapy Session</Text>
+              <Text style={[styles.cardDescription, isDarkMode && styles.darkDescription]}>
+                Select your preferred duration and start your personalized light therapy treatment.
+              </Text>
+              
+              <SessionControls
+                duration={duration}
+                showPicker={showDurationPicker}
+                onDurationPress={() => setShowDurationPicker(true)}
+                onDurationChange={handleDurationChange}
+                onDurationPickerClose={() => setShowDurationPicker(false)}
+                isDarkMode={isDarkMode}
+              />
+              
+              <TouchableOpacity
+                style={styles.startButton}
+                onPress={toggleSession}
+                activeOpacity={0.7}
+              >
+                <Play size={24} color="#FFFFFF" />
+                <Text style={styles.startButtonText}>START SESSION</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={[styles.infoBox, isDarkMode && styles.darkInfoBox]}>
+              <Text style={[styles.infoTitle, isDarkMode && styles.darkText]}>Important Information</Text>
+              <Text style={[styles.infoText, isDarkMode && styles.darkInfoText]}>
+                40Hz light therapy has shown promising results in supporting cognitive health and potentially reducing the progression of neurodegenerative conditions.
+              </Text>
+              <Text style={[styles.infoText, isDarkMode && styles.darkInfoText]}>
+                Always consult with your healthcare provider before starting any new therapy regimen.
               </Text>
             </View>
           </View>
-        </View>
-        
-        <View style={styles.contentContainer}>
-          <View style={[styles.sessionCard, isDarkMode && styles.darkSessionCard]}>
-            <Text style={[styles.cardTitle, isDarkMode && styles.darkText]}>Begin Your Therapy Session</Text>
-            <Text style={[styles.cardDescription, isDarkMode && styles.darkDescription]}>
-              Select your preferred duration and start your personalized light therapy treatment.
-            </Text>
-            
-            <SessionControls
-              duration={duration}
-              showPicker={showDurationPicker}
-              onDurationPress={() => setShowDurationPicker(true)}
-              onDurationChange={handleDurationChange}
-              onDurationPickerClose={() => setShowDurationPicker(false)}
-              isDarkMode={isDarkMode}
-            />
-            
-            <TouchableOpacity
-              style={styles.startButton}
-              onPress={toggleSession}
-              activeOpacity={0.7}
-            >
-              <Play size={24} color="#FFFFFF" />
-              <Text style={styles.startButtonText}>START SESSION</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <View style={[styles.infoBox, isDarkMode && styles.darkInfoBox]}>
-            <Text style={[styles.infoTitle, isDarkMode && styles.darkText]}>Important Information</Text>
-            <Text style={[styles.infoText, isDarkMode && styles.darkInfoText]}>
-              40Hz light therapy has shown promising results in supporting cognitive health and potentially reducing the progression of neurodegenerative conditions.
-            </Text>
-            <Text style={[styles.infoText, isDarkMode && styles.darkInfoText]}>
-              Always consult with your healthcare provider before starting any new therapy regimen.
-            </Text>
-          </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      )}
 
       {/* Instruction Modal */}
       <Modal
