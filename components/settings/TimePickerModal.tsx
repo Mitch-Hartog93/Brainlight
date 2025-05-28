@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Platform, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { BlurView } from 'expo-blur';
 
@@ -31,6 +31,12 @@ export default function TimePickerModal({
     onClose();
   };
 
+  const handleBackdropPress = (e: any) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   if (Platform.OS === 'web') {
     return (
       <Modal
@@ -39,44 +45,58 @@ export default function TimePickerModal({
         animationType="fade"
         onRequestClose={onClose}
       >
-        <BlurView intensity={80} style={styles.modalContainer} tint={isDarkMode ? "dark" : "light"}>
-          <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
-            <View style={styles.header}>
-              <TouchableOpacity onPress={onClose}>
-                <Text style={[styles.headerButton, isDarkMode && styles.darkHeaderButton]}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
-              <Text style={[styles.headerTitle, isDarkMode && styles.darkHeaderTitle]}>
-                Choose Time
+        <Pressable style={styles.modalContainer} onPress={handleBackdropPress}>
+          <BlurView intensity={20} style={styles.blurContainer} tint={isDarkMode ? "dark" : "light"}>
+            <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
+              <Text style={[styles.modalTitle, isDarkMode && styles.darkModalTitle]}>
+                Set Reminder Time
               </Text>
-              <TouchableOpacity onPress={handleSave}>
-                <Text style={styles.headerButton}>Save</Text>
-              </TouchableOpacity>
+              
+              <View style={styles.pickerContainer}>
+                <input
+                  type="time"
+                  value={`${selectedTime.getHours().toString().padStart(2, '0')}:${selectedTime.getMinutes().toString().padStart(2, '0')}`}
+                  onChange={(e) => {
+                    const [hours, minutes] = e.target.value.split(':').map(Number);
+                    const newDate = new Date(selectedTime);
+                    newDate.setHours(hours, minutes);
+                    setSelectedTime(newDate);
+                  }}
+                  style={{
+                    fontSize: 24,
+                    padding: 12,
+                    borderRadius: 12,
+                    border: `1px solid ${isDarkMode ? '#3A3A3C' : '#E5E5EA'}`,
+                    backgroundColor: isDarkMode ? '#2C2C2E' : '#FFFFFF',
+                    color: isDarkMode ? '#FFFFFF' : '#000000',
+                    width: '100%',
+                    maxWidth: 200,
+                    textAlign: 'center',
+                  }}
+                />
+              </View>
+              
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity 
+                  style={[styles.button, styles.cancelButton, isDarkMode && styles.darkCancelButton]} 
+                  onPress={onClose}
+                >
+                  <Text style={[styles.buttonText, styles.cancelText, isDarkMode && styles.darkCancelText]}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.button, styles.saveButton]} 
+                  onPress={handleSave}
+                >
+                  <Text style={[styles.buttonText, styles.saveText]}>
+                    Save
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            
-            <View style={styles.pickerContainer}>
-              <input
-                type="time"
-                value={`${selectedTime.getHours().toString().padStart(2, '0')}:${selectedTime.getMinutes().toString().padStart(2, '0')}`}
-                onChange={(e) => {
-                  const [hours, minutes] = e.target.value.split(':').map(Number);
-                  const newDate = new Date(selectedTime);
-                  newDate.setHours(hours, minutes);
-                  setSelectedTime(newDate);
-                }}
-                style={{
-                  fontSize: 24,
-                  padding: 10,
-                  borderRadius: 8,
-                  border: '1px solid #ccc',
-                  backgroundColor: isDarkMode ? '#2C2C2E' : '#FFFFFF',
-                  color: isDarkMode ? '#FFFFFF' : '#000000',
-                }}
-              />
-            </View>
-          </View>
-        </BlurView>
+          </BlurView>
+        </Pressable>
       </Modal>
     );
   }
@@ -85,39 +105,48 @@ export default function TimePickerModal({
     <Modal
       visible={visible}
       transparent={true}
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
     >
       <View style={styles.modalContainer}>
-        <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={onClose}>
-              <Text style={[styles.headerButton, isDarkMode && styles.darkHeaderButton]}>
-                Cancel
-              </Text>
-            </TouchableOpacity>
-            <Text style={[styles.headerTitle, isDarkMode && styles.darkHeaderTitle]}>
-              Choose Time
+        <BlurView intensity={20} style={styles.blurContainer} tint={isDarkMode ? "dark" : "light"}>
+          <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
+            <Text style={[styles.modalTitle, isDarkMode && styles.darkModalTitle]}>
+              Set Reminder Time
             </Text>
-            <TouchableOpacity onPress={handleSave}>
-              <Text style={[styles.headerButton, { color: '#007AFF' }]}>
-                Save
-              </Text>
-            </TouchableOpacity>
+            
+            <View style={styles.pickerWrapper}>
+              <DateTimePicker
+                value={selectedTime}
+                mode="time"
+                display="spinner"
+                onChange={handleTimeChange}
+                style={styles.picker}
+                textColor={isDarkMode ? '#FFFFFF' : '#000000'}
+                themeVariant={isDarkMode ? 'dark' : 'light'}
+              />
+            </View>
+            
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity 
+                style={[styles.button, styles.cancelButton, isDarkMode && styles.darkCancelButton]} 
+                onPress={onClose}
+              >
+                <Text style={[styles.buttonText, styles.cancelText, isDarkMode && styles.darkCancelText]}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.button, styles.saveButton]} 
+                onPress={handleSave}
+              >
+                <Text style={[styles.buttonText, styles.saveText]}>
+                  Save
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          
-          <View style={styles.pickerWrapper}>
-            <DateTimePicker
-              value={selectedTime}
-              mode="time"
-              display="spinner"
-              onChange={handleTimeChange}
-              style={styles.picker}
-              textColor={isDarkMode ? '#FFFFFF' : '#000000'}
-              themeVariant={isDarkMode ? 'dark' : 'light'}
-            />
-          </View>
-        </View>
+        </BlurView>
       </View>
     </Modal>
   );
@@ -126,52 +155,90 @@ export default function TimePickerModal({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  blurContainer: {
+    width: '90%',
+    maxWidth: 400,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   darkModalContent: {
     backgroundColor: '#1C1C1E',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
-  },
-  headerTitle: {
-    fontSize: 17,
+  modalTitle: {
+    fontSize: 20,
     fontWeight: '600',
     color: '#000000',
+    marginBottom: 20,
+    textAlign: 'center',
   },
-  darkHeaderTitle: {
+  darkModalTitle: {
     color: '#FFFFFF',
   },
-  headerButton: {
-    fontSize: 17,
-    color: '#007AFF',
-    paddingHorizontal: 8,
-  },
-  darkHeaderButton: {
-    color: '#0A84FF',
-  },
   pickerWrapper: {
+    width: '100%',
     alignItems: 'center',
-    paddingTop: 8,
+    marginBottom: 20,
   },
   picker: {
-    width: Platform.OS === 'ios' ? '100%' : 120,
-    height: 216,
+    width: Platform.OS === 'ios' ? '100%' : 200,
+    height: 200,
   },
   pickerContainer: {
+    width: '100%',
     alignItems: 'center',
     marginVertical: 20,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 12,
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cancelButton: {
+    backgroundColor: '#F2F2F7',
+  },
+  darkCancelButton: {
+    backgroundColor: '#2C2C2E',
+  },
+  saveButton: {
+    backgroundColor: '#007AFF',
+  },
+  cancelText: {
+    color: '#000000',
+  },
+  darkCancelText: {
+    color: '#FFFFFF',
+  },
+  saveText: {
+    color: '#FFFFFF',
   },
 });
