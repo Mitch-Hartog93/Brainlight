@@ -3,12 +3,10 @@ import { View, Text, StyleSheet, Switch, TouchableOpacity, ScrollView, Linking, 
 import { BellRing, Info, Moon, Wifi, Volume2, Clock } from 'lucide-react-native';
 import SettingItem from '@/components/settings/SettingItem';
 import TimePickerModal from '@/components/settings/TimePickerModal';
+import ContactModal from '@/components/settings/ContactModal';
 import { useTheme } from '@/context/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { scheduleDailyReminder, getNotificationTime } from '@/utils/notifications';
-
-const SUPPORT_EMAIL = 'mhartog.93@gmail.com';
-const SUPPORT_SUBJECT = 'Brainlight Support Request';
 
 export default function SettingsScreen() {
   const [notifications, setNotifications] = useState(false);
@@ -16,6 +14,7 @@ export default function SettingsScreen() {
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
   const [notificationTime, setNotificationTime] = useState(new Date());
 
   useEffect(() => {
@@ -66,35 +65,6 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleContactSupport = async () => {
-    const body = Platform.select({
-      web: undefined,
-      default: `\n\n--------------------\nDevice Information:\nPlatform: ${Platform.OS}\nVersion: ${Platform.Version}`
-    });
-
-    const mailtoUrl = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(SUPPORT_SUBJECT)}${body ? `&body=${encodeURIComponent(body)}` : ''}`;
-    
-    try {
-      const canOpen = await Linking.canOpenURL(mailtoUrl);
-      if (canOpen) {
-        await Linking.openURL(mailtoUrl);
-      } else {
-        // Fallback for web or when mail client is not available
-        await Linking.openURL(`https://brainlight.app/support`);
-      }
-    } catch (error) {
-      console.error('Error opening mail client:', error);
-    }
-  };
-
-  const formatTime = (date: Date): string => {
-    return date.toLocaleTimeString([], { 
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true 
-    });
-  };
-
   return (
     <ScrollView style={[styles.container, isDarkMode && styles.darkContainer]}>
       <View style={[styles.section, isDarkMode && styles.darkSection]}>
@@ -135,7 +105,7 @@ export default function SettingsScreen() {
           <SettingItem
             icon={<Clock size={22} color="#0066CC" />}
             title="Reminder Time"
-            description={`Daily reminder at ${formatTime(notificationTime)}`}
+            description={`Daily reminder at ${notificationTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`}
             isDarkMode={isDarkMode}
             onPress={() => setShowTimePicker(true)}
             right={<Clock size={20} color={isDarkMode ? '#C7C7CC' : '#C7C7CC'} />}
@@ -207,7 +177,7 @@ export default function SettingsScreen() {
       
       <TouchableOpacity 
         style={styles.contactButton}
-        onPress={handleContactSupport}
+        onPress={() => setShowContactModal(true)}
       >
         <Text style={styles.contactButtonText}>Contact Support</Text>
       </TouchableOpacity>
@@ -217,6 +187,12 @@ export default function SettingsScreen() {
         onClose={() => setShowTimePicker(false)}
         onSave={handleTimeChange}
         currentTime={notificationTime}
+        isDarkMode={isDarkMode}
+      />
+
+      <ContactModal
+        visible={showContactModal}
+        onClose={() => setShowContactModal(false)}
         isDarkMode={isDarkMode}
       />
     </ScrollView>
