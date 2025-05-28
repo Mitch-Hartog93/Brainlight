@@ -10,21 +10,17 @@ class AudioManager {
     if (Platform.OS !== 'web') return;
 
     try {
-      // Only create a new context if one doesn't exist
       if (!this.audioContext) {
-        // Create new context with explicit options
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
           latencyHint: 'interactive',
           sampleRate: 44100
         });
       }
 
-      // Ensure context is running
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume();
       }
 
-      // Add user interaction handler if needed
       if (this.audioContext.state !== 'running') {
         const unlockAudio = async () => {
           if (this.audioContext?.state !== 'running') {
@@ -46,13 +42,14 @@ class AudioManager {
     if (Platform.OS !== 'web' || !this.audioContext) return;
     
     try {
+      // Ensure we're starting fresh
+      await this.stop();
+      await this.cleanup();
+      
       // Ensure context is running
       if (this.audioContext.state !== 'running') {
         await this.audioContext.resume();
       }
-
-      // Stop any existing audio
-      await this.stop();
 
       // Create and configure gain node
       this.gainNode = this.audioContext.createGain();
@@ -61,20 +58,17 @@ class AudioManager {
 
       // Create oscillators with stereo panning
       const frequencies = [leftFreq, rightFreq];
-      const panValues = [-1, 1]; // Left and right channels
+      const panValues = [-1, 1];
 
       this.oscillators = frequencies.map((freq, index) => {
         const osc = this.audioContext!.createOscillator();
         const panner = this.audioContext!.createStereoPanner();
         
-        // Configure oscillator
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, this.audioContext!.currentTime);
         
-        // Configure panner
         panner.pan.setValueAtTime(panValues[index], this.audioContext!.currentTime);
         
-        // Connect nodes
         osc.connect(panner);
         panner.connect(this.gainNode!);
         
@@ -89,7 +83,7 @@ class AudioManager {
       this.isPlaying = true;
     } catch (error) {
       console.error('Failed to start audio:', error);
-      await this.stop();
+      await this.cleanup();
     }
   }
 
@@ -97,44 +91,75 @@ class AudioManager {
     if (!this.audioContext || !this.isPlaying) return;
 
     try {
-      // Quick fade out
+      // Immediate fade out
       if (this.gainNode) {
         const currentTime = this.audioContext.currentTime;
-        this.gainNode.gain.linearRampToValueAtTime(0, currentTime + 0.1);
+        this.gainNode.gain.cancelScheduledValues(currentTime);
+        this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, currentTime);
+        this.gainNode.gain.linearRampToValueAtTime(0, currentTime + 0.05);
       }
 
-      // Stop and cleanup after fade
+      // Stop everything after the fade
       setTimeout(() => {
-        this.oscillators.forEach(osc => {
-          try {
-            osc.stop();
-            osc.disconnect();
-          } catch (e) {
-            // Ignore errors if oscillator is already stopped
+        try {
+          // Stop and disconnect oscillators
+          this.oscillators.forEach(osc => {
+            try {
+              osc.stop();
+              osc.disconnect();
+            } catch (e) {
+              // Ignore errors if oscillator is already stopped
+            }
+          });
+          this.oscillators = [];
+
+          // Disconnect gain node
+          if (this.gainNode) {
+            this.gainNode.disconnect();
+            this.gainNode = null;
           }
-        });
-        this.oscillators = [];
 
-        if (this.gainNode) {
-          this.gainNode.disconnect();
-          this.gainNode = null;
+          this.isPlaying = false;
+        } catch (error) {
+          console.error('Error during cleanup:', error);
         }
-
-        this.isPlaying = false;
-      }, 150);
+      }, 100); // Reduced timeout to ensure quicker cleanup
     } catch (error) {
       console.error('Failed to stop audio:', error);
+      // Force cleanup on error
       this.cleanup();
     }
   }
 
   cleanup() {
-    this.stop();
-    if (this.audioContext && this.audioContext.state !== 'closed') {
-      this.audioContext.close();
-      this.audioContext = null;
+    try {
+      // Ensure oscillators are stopped and disconnected
+      this.oscillators.forEach(osc => {
+        try {
+          osc.stop();
+          osc.disconnect();
+        } catch (e) {
+          // Ignore errors if oscillator is already stopped
+        }
+      });
+      this.oscillators = [];
+
+      // Ensure gain node is disconnected
+      if (this.gainNode) {
+        this.gainNode.disconnect();
+        this.gainNode = null;
+      }
+
+      // Close and recreate audio context
+      if (this.audioContext && this.audioContext.state !== 'closed') {
+        this.audioContext.close();
+        this.audioContext = null;
+      }
+
+      this.isPlaying = false;
+    } catch (error) {
+      console.error('Error during final cleanup:', error);
     }
-    this.isPlaying = false;
   }
 
   isInitialized() {
