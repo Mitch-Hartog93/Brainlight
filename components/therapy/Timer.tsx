@@ -12,8 +12,8 @@ export default function Timer({ remainingTime, progress }: TimerProps) {
   const seconds = Math.floor(remainingTime % 60);
   const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   
-  const size = 240;
-  const strokeWidth = 12;
+  const size = 180; // Reduced from 240
+  const strokeWidth = 8; // Reduced from 12
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const strokeDashoffset = circumference * (1 - progress);
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   timeText: {
-    fontSize: 48,
+    fontSize: 36, // Reduced from 48
     fontWeight: '700',
     color: '#FFFFFF',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   labelText: {
-    fontSize: 14,
+    fontSize: 12, // Reduced from 14
     fontWeight: '600',
     color: '#FFFFFF',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',

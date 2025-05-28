@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 
 interface TherapyStatusProps {
@@ -7,7 +7,7 @@ interface TherapyStatusProps {
 }
 
 export default function TherapyStatus({ isActive, frequency }: TherapyStatusProps) {
-  const [animation] = useState(new Animated.Value(0));
+  const [animation] = React.useState(new Animated.Value(0));
   
   useEffect(() => {
     if (isActive) {
@@ -59,8 +59,8 @@ export default function TherapyStatus({ isActive, frequency }: TherapyStatusProp
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    marginTop: 20,
-    paddingTop: 20,
+    marginTop: 0, // Reduced from 20
+    paddingTop: 40, // Increased from 20
   },
   statusContainer: {
     flexDirection: 'row',
