@@ -47,6 +47,20 @@ export default function TherapyScreen() {
   const [showTimer, setShowTimer] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
 
+  // Define timerStyle using useAnimatedStyle
+  const timerStyle = useAnimatedStyle(() => {
+    return {
+      top: withTiming(showTimer ? insets.top + 20 : -200, {
+        duration: 300,
+        easing: Easing.inOut(Easing.ease)
+      }),
+      opacity: withTiming(showTimer ? 1 : 0, {
+        duration: 300,
+        easing: Easing.inOut(Easing.ease)
+      })
+    };
+  }, [showTimer, insets.top]);
+
   // Load audio preference on mount
   useEffect(() => {
     loadAudioPreference();
