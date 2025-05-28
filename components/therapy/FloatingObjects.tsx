@@ -12,13 +12,13 @@ import Animated, {
 import { Heart, Star } from 'lucide-react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const OBJECT_SIZE = 30;
+const OBJECT_SIZE = 24; // Reduced size
 const START_X = -OBJECT_SIZE;
 const END_X = SCREEN_WIDTH + OBJECT_SIZE;
 
 const OBJECTS = [
-  { component: Heart, color: '#FF6B6B' },
-  { component: Star, color: '#FFEEAD' },
+  { component: Heart, color: 'rgba(255, 107, 107, 0.6)' }, // More transparent
+  { component: Star, color: 'rgba(255, 238, 173, 0.6)' }, // More transparent
 ];
 
 interface FloatingObjectProps {
@@ -46,7 +46,6 @@ const FloatingObject = ({
   const hasCounted = useRef(false);
 
   useEffect(() => {
-    // Horizontal movement (left to right only)
     const moveHorizontal = () => {
       translateX.value = START_X;
       hasCounted.current = false;
@@ -60,11 +59,9 @@ const FloatingObject = ({
       });
     };
 
-    // Start horizontal movement with delay
     setTimeout(moveHorizontal, delay);
 
-    // Gentle vertical floating motion (limited range)
-    const floatRange = 40;
+    const floatRange = 30; // Reduced range
     translateY.value = withDelay(
       delay,
       withRepeat(
@@ -83,7 +80,6 @@ const FloatingObject = ({
       )
     );
 
-    // Smooth rotation
     rotation.value = withDelay(
       delay,
       withRepeat(
@@ -96,7 +92,6 @@ const FloatingObject = ({
       )
     );
 
-    // Check for star crossing the screen
     const checkInterval = setInterval(() => {
       if (isYellowStar && !hasCounted.current && translateX.value > 0) {
         hasCounted.current = true;
@@ -122,7 +117,7 @@ const FloatingObject = ({
       <ObjectComponent 
         size={OBJECT_SIZE} 
         color={color}
-        strokeWidth={1.5}
+        strokeWidth={1}
       />
     </Animated.View>
   );
@@ -133,7 +128,7 @@ interface FloatingObjectsProps {
 }
 
 export default function FloatingObjects({ onStarPass }: FloatingObjectsProps) {
-  const objects = [...Array(10)].map((_, index) => ({
+  const objects = [...Array(8)].map((_, index) => ({ // Reduced number of objects
     ...OBJECTS[index % OBJECTS.length],
     isYellowStar: OBJECTS[index % OBJECTS.length].component === Star
   }));
@@ -143,8 +138,8 @@ export default function FloatingObjects({ onStarPass }: FloatingObjectsProps) {
       {objects.map((object, index) => (
         <FloatingObject
           key={index}
-          delay={index * 2000}
-          duration={12000}
+          delay={index * 2500} // Increased delay between objects
+          duration={15000} // Increased duration for slower movement
           startY={100 + Math.random() * (Dimensions.get('window').height - 200)}
           ObjectComponent={object.component}
           color={object.color}
