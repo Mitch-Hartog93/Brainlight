@@ -87,7 +87,7 @@ export default function TherapyScreen() {
       position: 'absolute',
       left: 0,
       right: 0,
-      top: '40%',
+      top: '35%',
       zIndex: 5,
     };
   }, [remainingTime, isActive, duration]);
